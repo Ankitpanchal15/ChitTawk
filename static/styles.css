@@ -1,0 +1,24 @@
+.chat-form > div {
+  height: calc(100vh - 180px);
+}
+.messageItemBlock.my_message {
+  justify-content: flex-end;
+}
+.messageItemBlock.server_msg {
+  justify-content: center;
+  background-color: none;
+  padding-top: 0;
+}
+.messageItemBlock.server_msg > div {
+  background: none;
+  padding: 0;
+}
+
+.user-list {
+  background-color: #f1f1f1;
+}
+
+.user-list  .selected-user {
+  background-color: #5959591a;
+}
+

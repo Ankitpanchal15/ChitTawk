@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+    <script src="{{ url_for('static', filename='chat.js')}}"></script>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='styles.css') }}"
+    />
+    <title>ChitTawk</title>
+  </head>
+  <style></style>
+  <body class="bg-gray-100">
+    <header class="bg-blue-600 p-4 shadow-md">
+      <div class="container mx-auto flex justify-between items-center">
+        <div class="text-white font-bold text-xl">
+          <a href="#">ChitTawk</a>
+        </div>
+
+        <div class="space-x-6">
+          <a href="/login" class="text-white hover:text-blue-200">Login</a>
+          <a href="/home" class="text-white hover:text-blue-200">Home</a>
+          <a href="/logout" class="text-white hover:text-blue-200">Logout</a>
+        </div>
+
+        <div class="flex items-center space-x-4 text-white bg-white-900">
+          <div>
+            <h2 class="font-semibold text-lg capitalize">{{username}}</h2>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="container mx-auto">{% block content %} {% endblock %}</div>
+
+    <footer class="bg-white-600 text-center p-3">
+      <div class="container mx-auto">
+        <p class="m-0">Created By Ankit Panchal</p>
+      </div>
+    </footer>
+  </body>
+</html>
