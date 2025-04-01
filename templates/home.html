@@ -1,0 +1,167 @@
+{% extends "base.html" %} {% block content%} {% if error %}
+<p id="error">{{error}}</p>
+{% endif %}
+
+
+<div class="chat-form mt-5 bg-white rounded-lg shadow-lg">
+  <div class="flex">
+    <div class="user-list leftsidebar w-40">
+      {% for user in users %}
+      <div
+        class="user-item flex items-center space-x-3 cursor-pointer hover:bg-gray-300 p-2 transition"
+        data-user-id="{{ user['user_id'] }}"
+        data-chat-type="{{ user['type'] }}"
+      >
+        <div
+          class="w-8 h-8 rounded-full bg-blue-500 mr-2 text-white flex items-center justify-center uppercase"
+        >
+          {{user['user_name'][0]}}
+        </div>
+        <div class="text-black-500">
+          <p class="m-0 text-1xl">{{user['user_name']}}</p>
+        </div>
+      </div>
+
+      {% endfor %}
+    </div>
+   
+    <div class="chat-rightsidebar flex-1 p-3 flex ">
+      <div id="selectUserMessage" class="text-center text-gray-500 mt-5">
+        <p class="text-lg bold">Please select a user to start chatting</p>
+      </div>
+      <div id="userMessageInputWrap" class=" flex-1 flex flex-col">
+        <div
+          id="messagesContainer"
+          class="overflow-auto flex-1"
+        ></div>
+        <div class="field mb-3">
+          <input
+            type="text"
+            id="msg-input"
+            placeholder="Write Message "
+            class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+          />
+          <button
+            class="mt-2 w-full p-3 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition duration-300"
+            id="send"
+          >
+            Send
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .sent {
+    text-align: right;
+  }
+</style>
+<script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    let userId = "";
+    let client_id = "";
+    let selected_userid = "";
+    const socket = io();
+
+    const messageChartContainer = document.getElementById("messagesContainer");
+    const selectUserMessage = document.getElementById("selectUserMessage")
+    // const userMessageInputWrap = document.getElementById("userMessageInputWrap")
+
+    const msgInput = document.getElementById("msg-input");
+    const submitbtn = document.getElementById("send");
+    const chatDiv = document.getElementById("chatDiv");
+
+    const localSelectedUser = localStorage.getItem("selectedUser");
+    const localChatType = localStorage.getItem("chat-type");
+
+    if (localSelectedUser) {
+      selectUserMessage.classList.add('hidden')
+      // userMessageInputWrap.classList.remove("hidden")
+      selected_userid = localSelectedUser;
+      document.querySelectorAll(".user-item").forEach((item) => {
+        if (item.getAttribute("data-user-id") === localSelectedUser) {
+          item.classList.add("selected-user");
+        }
+      });
+      socket.emit("get_messages", {
+        selected_user_id: localSelectedUser,
+        chat_type: localChatType,
+      });
+    }
+
+    if (!localSelectedUser) {
+    }
+
+    const sendMessage = () => {
+      const reciever_id = localStorage.getItem("selectedUser");
+      const chatType = localStorage.getItem("chat-type");
+      console.log("chatType", chatType);
+      const message = msgInput.value.trim();
+      if (message) {
+        socket.emit("message", {
+          reciever_id: reciever_id,
+          userId,
+          message: message,
+          chat_type: chatType,
+        });
+        msgInput.value = "";
+      }
+    };
+
+    msgInput.addEventListener("keypress", (e) => {
+      if (e.key == "Enter") {
+        sendMessage();
+      }
+    });
+
+    submitbtn.addEventListener("click", () => {
+      sendMessage();
+    });
+
+    socket.on("connection_response", ({ userId: id }) => {
+      console.log("connection_response", id);
+      localStorage.setItem("userId", id);
+      userId = id;
+    });
+
+    document.querySelectorAll(".user-item").forEach((item) => {
+      item.addEventListener("click", () => {
+        document.querySelectorAll(".user-item").forEach((user) => {
+          user.classList.remove("selected-user");
+        });
+        const user_id = item.getAttribute("data-user-id");
+        item.classList.add("selected-user");
+        console.log("user_id", user_id);
+
+        localStorage.setItem("selectedUser", user_id);
+
+        const chatType = item.getAttribute("data-chat-type");
+        localStorage.setItem("chat-type", chatType);
+
+        socket.emit("get_messages", {
+          selected_user_id: user_id,
+          chat_type: chatType,
+        });
+      });
+    });
+
+    socket.on("load_history_messages", (data) => {
+      console.log("load_history_messages", data);
+      messageChartContainer.innerHTML = "";
+      data.messages?.forEach((item) => printMessages(item, userId));
+    });
+
+    socket.on("new_message", (data) => {
+      console.log("new Message ", data);
+      const selectedUser = localStorage.getItem("selectedUser");
+      const userId = localStorage.getItem("userId");
+      if (selectedUser == data.reciever_id || userId == data.sender_id) {
+        printMessages(data, userId);
+      }
+    });
+  });
+</script>
+{%endblock%}
